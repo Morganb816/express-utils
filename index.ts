@@ -24,19 +24,23 @@ export class ErrorCode {
  * @param  {ErrorCode[]} [errorCodes] 
  * @return Function 
  */
-export function serviceFactory(func: Function, errorCodes?: ErrorCode[]): (req: Request, res: Response, next: NextFunction) => Promise<void> {
+export function serviceFactory(func: Function, errorCodes?: ErrorCode[], customErrorHandler?: Function): (req: Request, res: Response, next: NextFunction) => Promise<void> {
     return async function (req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             return await func(req, res, next);
         } catch (err) {
-            errorCodes?.forEach(({ type, code, message }) => {
-                if (type === err.message)
-                    res.status(code).send(message);
+            if (customErrorHandler) {
+                customErrorHandler(err, req, res, next);
                 return;
-            });
-            console.log(err);
-            res.status(500).send('Internal Server Error');
-            return;
+            } else {
+                errorCodes?.forEach(({ type, code, message }) => {
+                    if (type === err.message)
+                        res.status(code).send(message);
+                    return;
+                });
+                res.status(500).send('Internal Server Error');
+                return;
+            };
         };
     };
 };
