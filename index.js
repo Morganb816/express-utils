@@ -60,7 +60,7 @@ exports.ErrorCode = ErrorCode;
  * @param  {ErrorCode[]} [errorCodes]
  * @return Function
  */
-function serviceFactory(func, errorCodes) {
+function serviceFactory(func, errorCodes, customErrorHandler) {
     return function (req, res, next) {
         return __awaiter(this, void 0, void 0, function () {
             var err_1;
@@ -72,15 +72,22 @@ function serviceFactory(func, errorCodes) {
                     case 1: return [2 /*return*/, _a.sent()];
                     case 2:
                         err_1 = _a.sent();
-                        errorCodes === null || errorCodes === void 0 ? void 0 : errorCodes.forEach(function (_a) {
-                            var type = _a.type, code = _a.code, message = _a.message;
-                            if (type === err_1.message)
-                                res.status(code).send(message);
-                            return;
-                        });
-                        console.log(err_1);
-                        res.status(500).send('Internal Server Error');
-                        return [2 /*return*/];
+                        if (customErrorHandler) {
+                            customErrorHandler(err_1, req, res, next);
+                            return [2 /*return*/];
+                        }
+                        else {
+                            errorCodes === null || errorCodes === void 0 ? void 0 : errorCodes.forEach(function (_a) {
+                                var type = _a.type, code = _a.code, message = _a.message;
+                                if (type === err_1.message)
+                                    res.status(code).send(message);
+                                return;
+                            });
+                            res.status(500).send('Internal Server Error');
+                            return [2 /*return*/];
+                        }
+                        ;
+                        return [3 /*break*/, 3];
                     case 3:
                         ;
                         return [2 /*return*/];
